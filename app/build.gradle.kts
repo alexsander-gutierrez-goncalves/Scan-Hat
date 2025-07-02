@@ -8,13 +8,13 @@ plugins {
 
 android {
     namespace = "br.com.alexsander.leitor"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "br.com.alexsander.leitor"
         minSdk = 21
         targetSdk = 35
-        versionCode = 11
+        versionCode = 12
         versionName = "2.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
