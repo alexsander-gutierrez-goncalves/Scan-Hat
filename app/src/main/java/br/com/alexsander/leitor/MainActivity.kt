@@ -42,13 +42,15 @@ enum class ROUTE(@StringRes val title: Int) {
 }
 
 class MainActivity : ComponentActivity() {
+    private val database by lazy { AppDatabase.getInstance(this) }
+    private val codeDAO by lazy { database.codeDAO() }
+    private val viewModel by viewModels<CodeViewModel> {
+        CodeViewModel.provideFactory(codeDAO)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MobileAds.initialize(this)
         installSplashScreen()
-        val db = AppDatabase.getInstance(this)
-        val codeDAO = db.codeDAO()
-        val viewModel by viewModels<CodeViewModel> { CodeViewModel.provideFactory(codeDAO) }
         enableEdgeToEdge()
 
         setContent {
