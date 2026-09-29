@@ -29,21 +29,21 @@ fun BottomBar(
             IconButton(
                 navController::navigateToHome,
                 Modifier.weight(1f),
-                enabled = currentBackStackEntry?.destination?.route != ROUTE.FIRST.name,
+                enabled = currentBackStackEntry?.destination?.route != ROUTE.FIRST.name
             ) {
                 Icon(Icons.Filled.QrCodeScanner, stringResource(R.string.first_bottom_button))
             }
             IconButton(
                 navController::navigateToCodes,
                 Modifier.weight(1f),
-                enabled = currentBackStackEntry?.destination?.route != ROUTE.SECOND.name,
+                enabled = currentBackStackEntry?.destination?.route != ROUTE.SECOND.name
             ) {
                 Icon(Icons.Filled.History, stringResource(R.string.second_bottom_button))
             }
             IconButton(
                 navController::navigateToGenerate,
                 Modifier.weight(1f),
-                enabled = currentBackStackEntry?.destination?.route != ROUTE.THIRD.name,
+                enabled = currentBackStackEntry?.destination?.route != ROUTE.THIRD.name
             ) {
                 Icon(Icons.Filled.QrCode, stringResource(R.string.third_bottom_button))
             }

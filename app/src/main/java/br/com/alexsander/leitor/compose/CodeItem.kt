@@ -18,8 +18,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import br.com.alexsander.leitor.R
@@ -32,24 +37,29 @@ fun CodeItem(
     delete: ((Code) -> Unit?)? = null
 ) {
     var openDialog by remember { mutableStateOf(false) }
-    ListItem(headlineContent = {
-        Text(
-            text = code.value,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    },
+    val title = stringResource(R.string.delete_confirm_title)
+    val message = "${stringResource(R.string.delete_confirm_message)} ${code.value}?"
+    val yes = stringResource(R.string.yes)
+    val not = stringResource(R.string.no)
+    ListItem(
+        headlineContent = {
+            Text(
+                text = code.value,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        },
         trailingContent = {
             Row {
                 IconButton({ copy(code.value) }) {
-                    Icon(Icons.Rounded.ContentCopy, "")
+                    Icon(Icons.Rounded.ContentCopy, stringResource(R.string.copy_icon))
                 }
                 if (delete != null) {
                     IconButton(
                         { openDialog = true },
-                        colors = IconButtonDefaults.iconButtonColors(contentColor = Color.Red)
+                        colors = IconButtonDefaults.iconButtonColors(contentColor = Color.Red),
                     ) {
-                        Icon(Icons.Rounded.Clear, "")
+                        Icon(Icons.Rounded.Clear, stringResource(R.string.delete_icon))
                     }
                 }
             }
@@ -58,15 +68,22 @@ fun CodeItem(
     HorizontalDivider()
     if (openDialog && delete != null) {
         AlertDialog(
-            icon = { Icon(Icons.Rounded.Warning, "") },
+            icon = { Icon(Icons.Rounded.Warning, stringResource(R.string.alert_icon)) },
             title = {
-                Text(stringResource(R.string.delete_confirm_title))
+                Text(title, Modifier.semantics {
+                    liveRegion = LiveRegionMode.Polite
+                    contentDescription = title
+                })
             },
             text = {
                 Text(
-                    "${stringResource(R.string.delete_confirm_message)} ${code.value}?",
+                    message,
                     overflow = TextOverflow.Ellipsis,
-                    maxLines = 3
+                    maxLines = 3,
+                    modifier = Modifier.semantics {
+                        liveRegion = LiveRegionMode.Polite
+                        contentDescription = message
+                    }
                 )
             },
             onDismissRequest = { openDialog = false },
@@ -75,11 +92,17 @@ fun CodeItem(
                     delete(code)
                     openDialog = false
                 }) {
-                    Text(stringResource(R.string.yes))
+                    Text(yes, Modifier.semantics {
+                        liveRegion = LiveRegionMode.Polite
+                        contentDescription = yes
+                    })
                 }
             }, dismissButton = {
                 TextButton(onClick = { openDialog = false }) {
-                    Text(stringResource(R.string.no))
+                    Text(not, Modifier.semantics {
+                        liveRegion = LiveRegionMode.Polite
+                        contentDescription = not
+                    })
                 }
             })
     }

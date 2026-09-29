@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CodeDAO {
-    @Query("SELECT * FROM code")
+    @Query("SELECT * FROM code ORDER BY created_at DESC")
     fun getAll(): Flow<List<Code>>
 
     @Insert

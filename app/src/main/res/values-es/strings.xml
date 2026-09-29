@@ -16,6 +16,12 @@
     <string name="codes_screen">Códigos</string>
     <string name="generate_screen">Generar código QR</string>
     <string name="first_bottom_button">Escáner</string>
-    <string name="second_bottom_button">Lista de códigos</string>
-    <string name="third_bottom_button">Generar código QR</string>
+    <string name="second_bottom_button">Códigos</string>
+    <string name="third_bottom_button">Crear un código QR</string>
+    <string name="copy_icon">Icono de copiar</string>
+    <string name="delete_icon">Icono de eliminar</string>
+    <string name="flashlight_icon">Icono de linterna</string>
+    <string name="qr_code_share_title">Compartir</string>
+    <string name="alert_icon">Icono de alerta</string>
+    <string name="image_icon">Icono de imagen</string>
 </resources>

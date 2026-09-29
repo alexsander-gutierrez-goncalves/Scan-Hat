@@ -2,18 +2,12 @@ package br.com.alexsander.leitor.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis.COORDINATE_SYSTEM_VIEW_REFERENCED
 import androidx.camera.mlkit.vision.MlKitAnalyzer
 import androidx.camera.view.LifecycleCameraController
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.FlashlightOff
-import androidx.compose.material.icons.rounded.FlashlightOn
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -21,9 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
@@ -34,8 +26,10 @@ import androidx.navigation.navOptions
 import br.com.alexsander.leitor.ROUTE
 import br.com.alexsander.leitor.compose.CameraPreview
 import br.com.alexsander.leitor.compose.ClipBoardModal
+import br.com.alexsander.leitor.compose.FlashlightIcon
 import br.com.alexsander.leitor.data.Code
 import br.com.alexsander.leitor.viewmodel.CodeViewModel
+import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 
 fun NavHostController.navigateToHome() {
@@ -46,24 +40,24 @@ fun NavHostController.navigateToHome() {
     })
 }
 
-fun NavGraphBuilder.homeScreen(viewModel: CodeViewModel, copy: (String) -> Unit = {}) {
+fun NavGraphBuilder.homeScreen(barcodeScanner: BarcodeScanner, viewModel: CodeViewModel, copy: (String) -> Unit = {}) {
     composable(ROUTE.FIRST.name)
     {
-        HomeScreen(viewModel::insert, copy)
+        HomeScreen(barcodeScanner,viewModel::insert, copy)
     }
 }
 
 @Composable
-fun HomeScreen(onRead: (Code) -> Unit = { }, copy: (String) -> Unit = { }) {
+fun HomeScreen(barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(),onRead: (Code) -> Unit = { }, copy: (String) -> Unit = { }) {
     val context = LocalContext.current
     val managedActivityResultLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {}
     val cameraController = remember { LifecycleCameraController(context) }
+    cameraController.cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     var code by remember { mutableStateOf<Code?>(null) }
     val torchEnabled = remember { mutableStateOf(false) }
-    val barcodeScanner = BarcodeScanning.getClient()
-    LaunchedEffect(Unit) {
+    LaunchedEffect(barcodeScanner) {
         managedActivityResultLauncher.launch(android.Manifest.permission.CAMERA)
 
         cameraController.setImageAnalysisAnalyzer(
@@ -83,30 +77,15 @@ fun HomeScreen(onRead: (Code) -> Unit = { }, copy: (String) -> Unit = { }) {
         )
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(barcodeScanner ) {
         onDispose {
-            BarcodeScanning.getClient().close() // Libera o scanner ao sair
+            barcodeScanner.close() // Libera o scanner ao sair
         }
     }
 
     Box {
         CameraPreview(cameraController, Modifier.fillMaxSize())
-        IconButton(
-            onClick = {
-                torchEnabled.value = !torchEnabled.value
-                cameraController.enableTorch(torchEnabled.value)
-            },
-            Modifier.align(Alignment.Center),
-            colors = IconButtonDefaults.iconButtonColors(
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                containerColor = Color(0.5f, 0.5f, 0.5f, 0.5f)
-            )
-        ) {
-            Icon(
-                imageVector = if (torchEnabled.value) Icons.Rounded.FlashlightOff else Icons.Rounded.FlashlightOn,
-                contentDescription = ""
-            )
-        }
+        FlashlightIcon(torchEnabled, cameraController)
         if (code != null) {
             ClipBoardModal(code, {
                 copy(it)

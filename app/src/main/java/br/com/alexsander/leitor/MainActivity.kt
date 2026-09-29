@@ -1,5 +1,6 @@
 package br.com.alexsander.leitor
 
+import android.content.ClipData
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,8 +17,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.toClipEntry
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -27,12 +34,15 @@ import br.com.alexsander.leitor.compose.BottomBar
 import br.com.alexsander.leitor.compose.TopBar
 import br.com.alexsander.leitor.data.AppDatabase
 import br.com.alexsander.leitor.data.Code
+import br.com.alexsander.leitor.repository.CodeRepositoryImpl
 import br.com.alexsander.leitor.screens.codesScreen
 import br.com.alexsander.leitor.screens.generateScreen
 import br.com.alexsander.leitor.screens.homeScreen
 import br.com.alexsander.leitor.ui.theme.LeitorTheme
 import br.com.alexsander.leitor.viewmodel.CodeViewModel
+import br.com.alexsander.leitor.viewmodel.CodeViewModelFactory
 import com.google.android.gms.ads.MobileAds
+import com.google.mlkit.vision.barcode.BarcodeScanning
 import kotlinx.coroutines.launch
 
 enum class ROUTE(@StringRes val title: Int) {
@@ -44,21 +54,26 @@ enum class ROUTE(@StringRes val title: Int) {
 class MainActivity : ComponentActivity() {
     private val database by lazy { AppDatabase.getInstance(this) }
     private val codeDAO by lazy { database.codeDAO() }
-    private val viewModel by viewModels<CodeViewModel> {
-        CodeViewModel.provideFactory(codeDAO)
+    private val viewModel by viewModels<CodeViewModel>() {
+        CodeViewModelFactory(CodeRepositoryImpl(codeDAO))
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MobileAds.initialize(this)
         installSplashScreen()
         enableEdgeToEdge()
 
+        val barcodeScanner = BarcodeScanning.getClient()
+
         setContent {
             val navController = rememberNavController()
             val currentBackStackEntry by navController.currentBackStackEntryAsState()
-            val clipboardManager = LocalClipboardManager.current
             val scope = rememberCoroutineScope()
             val snackBarHostState = remember { SnackbarHostState() }
+            val context = LocalContext.current
+            val clipboard = LocalClipboard.current
+
             fun showSnackBar(text: String) {
                 scope.launch {
                     snackBarHostState.showSnackbar(
@@ -68,7 +83,8 @@ class MainActivity : ComponentActivity() {
             }
 
             fun copy(text: String) {
-                clipboardManager.setText(AnnotatedString(text))
+                val clipData = ClipData.newPlainText("code", text)
+                scope.launch { clipboard.setClipEntry(clipData.toClipEntry()) }
                 showSnackBar(getString(R.string.copy_action))
             }
 
@@ -83,7 +99,12 @@ class MainActivity : ComponentActivity() {
 
             LeitorTheme {
                 Scaffold(
-                    snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
+                    snackbarHost = {
+                        SnackbarHost(hostState = snackBarHostState, Modifier.semantics {
+                            liveRegion = LiveRegionMode.Polite
+                            contentDescription = context.getString(R.string.copy_action)
+                        })
+                    },
                     topBar = { TopBar(title) },
                     bottomBar = { BottomBar(navController, currentBackStackEntry) },
                     modifier = Modifier.fillMaxSize()
@@ -94,12 +115,12 @@ class MainActivity : ComponentActivity() {
                     ) {
                         NavHost(
                             navController = navController,
-                            startDestination = ROUTE.FIRST.name,
+                            startDestination = ROUTE.SECOND.name,
                             Modifier.weight(1f)
                         ) {
-                            homeScreen(viewModel) { copy(it) }
+                            homeScreen(barcodeScanner, viewModel) { copy(it) }
                             codesScreen(viewModel, navController, { copy(it) }, { delete(it) })
-                            generateScreen()
+                            generateScreen(viewModel)
                         }
                         AD()
                     }

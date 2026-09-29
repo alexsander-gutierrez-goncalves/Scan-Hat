@@ -8,5 +8,7 @@ import androidx.room.PrimaryKey
 data class Code(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
 
-    @ColumnInfo(name = "value") val value: String
+    @ColumnInfo(name = "value") val value: String,
+
+    @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis()
 )
