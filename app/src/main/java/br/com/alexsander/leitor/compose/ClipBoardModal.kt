@@ -12,9 +12,9 @@ import br.com.alexsander.leitor.data.Code
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun ClipBoardModal(
-    code: Code?,
-    copy: (String) -> Unit,
-    onDismissRequest: () -> Unit
+    code: Code,
+    copy: (String) -> Unit = { },
+    onDismissRequest: () -> Unit = { }
 ) {
     val sheetState = rememberModalBottomSheetState()
     ModalBottomSheet(
@@ -22,13 +22,12 @@ fun ClipBoardModal(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState
     ) {
-        CodeItem(code = code!!, { copy(it) })
+        CodeItem(code, copy)
     }
 }
 
-
-@Preview
+@Preview(widthDp = 360, heightDp = 640)
 @Composable
 fun ClipBoardModalPreview() {
-    ClipBoardModal(code = Code(value = "text"), copy = { }) { }
+    ClipBoardModal(code = Code(value = "text"))
 }

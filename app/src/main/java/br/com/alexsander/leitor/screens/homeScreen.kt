@@ -40,15 +40,23 @@ fun NavHostController.navigateToHome() {
     })
 }
 
-fun NavGraphBuilder.homeScreen(barcodeScanner: BarcodeScanner, viewModel: CodeViewModel, copy: (String) -> Unit = {}) {
+fun NavGraphBuilder.homeScreen(
+    barcodeScanner: BarcodeScanner,
+    viewModel: CodeViewModel,
+    copy: (String) -> Unit = {}
+) {
     composable(ROUTE.FIRST.name)
     {
-        HomeScreen(barcodeScanner,viewModel::insert, copy)
+        HomeScreen(barcodeScanner, viewModel::insert, copy)
     }
 }
 
 @Composable
-fun HomeScreen(barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(),onRead: (Code) -> Unit = { }, copy: (String) -> Unit = { }) {
+fun HomeScreen(
+    barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(),
+    onRead: (Code) -> Unit = { },
+    copy: (String) -> Unit = { }
+) {
     val context = LocalContext.current
     val managedActivityResultLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -77,7 +85,7 @@ fun HomeScreen(barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(),onRe
         )
     }
 
-    DisposableEffect(barcodeScanner ) {
+    DisposableEffect(barcodeScanner) {
         onDispose {
             barcodeScanner.close() // Libera o scanner ao sair
         }
@@ -86,13 +94,8 @@ fun HomeScreen(barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(),onRe
     Box {
         CameraPreview(cameraController, Modifier.fillMaxSize())
         FlashlightIcon(torchEnabled, cameraController)
-        if (code != null) {
-            ClipBoardModal(code, {
-                copy(it)
-                code = null
-            }) {
-                code = null
-            }
+        code?.let {
+            ClipBoardModal(it, copy) { code = null }
         }
     }
 }

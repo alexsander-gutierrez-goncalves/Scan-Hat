@@ -16,6 +16,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,6 +32,7 @@ import androidx.navigation.navOptions
 import br.com.alexsander.leitor.R
 import br.com.alexsander.leitor.ROUTE
 import br.com.alexsander.leitor.compose.CodeItem
+import br.com.alexsander.leitor.compose.ConfirmDeleteActionDialog
 import br.com.alexsander.leitor.data.Code
 import br.com.alexsander.leitor.viewmodel.CodeViewModel
 
@@ -60,6 +64,7 @@ fun CodeScreen(
     copy: (String) -> Unit = {},
     delete: (Code) -> Unit = {}
 ) {
+    var selectedCodeForDelete by remember { mutableStateOf<Code?>(null) }
     LazyColumn(
         Modifier
             .fillMaxSize(),
@@ -86,8 +91,11 @@ fun CodeScreen(
         }
         items(codes)
         { code ->
-            CodeItem(code, copy, delete)
+            CodeItem(code, copy) { selectedCodeForDelete = code }
         }
+    }
+    selectedCodeForDelete?.let {
+        ConfirmDeleteActionDialog(it, delete) { selectedCodeForDelete = null }
     }
 }
 
